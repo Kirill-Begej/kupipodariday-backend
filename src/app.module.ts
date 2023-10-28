@@ -1,9 +1,31 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import devConfig from './config/dev.config';
+import { configValidationSchema } from './config/config.validation';
+import { TypeOrmConfigService } from './config/orm.config';
 import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
+import { OffersModule } from './offers/offers.module';
+import { WishlistsModule } from './wishlists/wishlists.module';
+import { WishesModule } from './wishes/wishes.module';
 
 @Module({
-  imports: [],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: ['.env.dev'],
+      load: [devConfig],
+      isGlobal: true,
+      validationSchema: configValidationSchema,
+    }),
+    TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
+    UsersModule,
+    WishesModule,
+    WishlistsModule,
+    OffersModule,
+  ],
   controllers: [AppController],
-  providers: [],
+  providers: [AppService],
 })
 export class AppModule {}
