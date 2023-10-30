@@ -6,6 +6,7 @@ import { configValidationSchema } from './config/config.validation';
 import { TypeOrmConfigService } from './config/orm.config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { AppService } from './app.service';
       validationSchema: configValidationSchema,
     }),
     TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
