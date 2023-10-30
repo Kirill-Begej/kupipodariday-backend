@@ -1,5 +1,6 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { BaseEntity } from 'src/entities/base.entity';
+import { Wish } from 'src/wishes/entities/wish.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -17,4 +18,7 @@ export class User extends BaseEntity {
 
   @Column()
   password: string;
+
+  @OneToMany(() => Wish, (wish) => wish.owner)
+  wishes: Wish[];
 }
