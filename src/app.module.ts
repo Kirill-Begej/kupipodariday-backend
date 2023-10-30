@@ -1,9 +1,22 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import devConfig from './config/dev.config';
+import { configValidationSchema } from './config/config.validation';
+import { TypeOrmConfigService } from './config/orm.config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 @Module({
-  imports: [],
+  imports: [
+    ConfigModule.forRoot({
+      envFilePath: ['.env.dev'],
+      load: [devConfig],
+      isGlobal: true,
+      validationSchema: configValidationSchema,
+    }),
+    TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
