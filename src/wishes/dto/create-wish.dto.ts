@@ -23,5 +23,6 @@ export class CreateWishDto {
   description: string;
 
   @IsNumber()
+  @IsOptional()
   copied: number;
 }

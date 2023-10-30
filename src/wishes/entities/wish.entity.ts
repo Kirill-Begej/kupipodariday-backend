@@ -13,16 +13,24 @@ export class Wish extends BaseEntity {
   @Column()
   image: string;
 
-  @Column()
+  @Column({
+    type: 'numeric',
+    precision: 1000,
+    scale: 2,
+  })
   price: number;
 
-  @Column()
+  @Column({
+    type: 'numeric',
+    precision: 1000,
+    scale: 2,
+  })
   raised: number;
 
-  @Column()
+  @Column({ default: '' })
   description: string;
 
-  @Column()
+  @Column({ default: 0 })
   copied: number;
 
   @ManyToOne(() => User, (user) => user.wishes)
