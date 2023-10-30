@@ -7,6 +7,9 @@ import { TypeOrmConfigService } from './config/orm.config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
+import { WishesModule } from './wishes/wishes.module';
+import { WishlistsModule } from './wishlists/wishlists.module';
+import { OffersModule } from './offers/offers.module';
 
 @Module({
   imports: [
@@ -18,6 +21,9 @@ import { UsersModule } from './users/users.module';
     }),
     TypeOrmModule.forRootAsync({ useClass: TypeOrmConfigService }),
     UsersModule,
+    WishesModule,
+    WishlistsModule,
+    OffersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
