@@ -1,7 +1,7 @@
-import { Column, Entity, JoinColumn, ManyToMany, ManyToOne } from 'typeorm';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm';
 import { BaseEntity } from 'src/entities/base.entity';
 import { User } from 'src/users/entities/user.entity';
-import { Wishlist } from 'src/wishlists/entities/wishlist.entity';
+import { Offer } from 'src/offers/entities/offer.entity';
 
 @Entity()
 export class Wish extends BaseEntity {
@@ -35,6 +35,8 @@ export class Wish extends BaseEntity {
   copied: number;
 
   @ManyToOne(() => User, (user) => user.wishes)
-  @JoinColumn({ name: 'owner' })
   owner: User;
+
+  @OneToMany(() => Offer, (offer) => offer.item)
+  offers: Offer[];
 }
