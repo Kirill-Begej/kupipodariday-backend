@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 import validationException from './exceptions/validation.exception';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { cors: true });
   const configService = app.get(ConfigService);
   const PORT = configService.get('port');
 
