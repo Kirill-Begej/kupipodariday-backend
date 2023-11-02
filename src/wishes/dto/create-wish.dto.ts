@@ -15,6 +15,7 @@ export class CreateWishDto {
   price: number;
 
   @IsNumber()
+  @IsOptional()
   raised: number;
 
   @IsString()

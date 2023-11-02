@@ -1,27 +1,21 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Wish } from './entities/wish.entity';
 import { CreateWishDto } from './dto/create-wish.dto';
-// import { UpdateWishDto } from './dto/update-wish.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class WishesService {
   constructor(
     @InjectRepository(Wish) private readonly wishRepository: Repository<Wish>,
+    private readonly usersService: UsersService,
   ) {}
 
-  async create(createWishDto: CreateWishDto) {
-    try {
-      return await this.wishRepository.save(createWishDto);
-    } catch (err) {
-      if (err instanceof QueryFailedError) {
-        throw new HttpException(
-          'Переданы некорректные данные',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-    }
+  async create(createWishDto: CreateWishDto, id: number) {
+    const user = await this.usersService.find({ id }, false, false);
+    await this.wishRepository.save({ ...createWishDto, owner: user });
+    return {};
   }
 
   async findAll() {

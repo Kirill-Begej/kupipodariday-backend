@@ -22,6 +22,7 @@ export class Wish extends BaseEntity {
   price: number;
 
   @Column({
+    default: 0,
     type: 'numeric',
     precision: 1000,
     scale: 2,
