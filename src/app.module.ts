@@ -11,6 +11,7 @@ import { WishesModule } from './wishes/wishes.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
 import { OffersModule } from './offers/offers.module';
 import { AuthModule } from './auth/auth.module';
+import { HashingModule } from './hashing/hashing.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AuthModule } from './auth/auth.module';
     WishlistsModule,
     OffersModule,
     AuthModule,
+    HashingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

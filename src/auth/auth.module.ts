@@ -8,10 +8,12 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { HashingModule } from 'src/hashing/hashing.module';
 
 @Module({
   imports: [
     UsersModule,
+    HashingModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
