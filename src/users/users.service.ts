@@ -1,10 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QueryFailedError, Repository } from 'typeorm';
+import { FindOptionsWhere, QueryFailedError, Repository } from 'typeorm';
+import { validate } from 'class-validator';
 import { HashingService } from 'src/hashing/hashing.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { QueryUserDto } from './dto/query-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -34,13 +36,13 @@ export class UsersService {
     }
   }
 
-  async findByUsername(
-    username: string,
-    showEmail: boolean = true,
+  async find(
+    findBy: FindOptionsWhere<User> | FindOptionsWhere<User>[],
     showPassword: boolean = true,
+    showEmail: boolean = true,
   ) {
     return await this.userRepository.findOne({
-      where: { username },
+      where: findBy,
       select: {
         id: true,
         username: true,
@@ -48,21 +50,6 @@ export class UsersService {
         avatar: true,
         email: showEmail,
         password: showPassword,
-        createdAt: true,
-        updateAt: true,
-      },
-    });
-  }
-
-  async findById(id: number) {
-    return await this.userRepository.findOne({
-      where: { id },
-      select: {
-        id: true,
-        username: true,
-        about: true,
-        avatar: true,
-        email: true,
         createdAt: true,
         updateAt: true,
       },
@@ -78,6 +65,21 @@ export class UsersService {
 
     await this.userRepository.update(id, user);
 
-    return this.findById(id);
+    return this.find({ id }, false);
+  }
+
+  async findMany(query: string) {
+    const queryUser = new QueryUserDto();
+    queryUser.email = query;
+
+    const result = (await validate(queryUser)).length
+      ? [await this.find({ username: query }, false)]
+      : [await this.find({ email: query }, false)];
+
+    if (!result[0]) {
+      throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
+    }
+
+    return result;
   }
 }

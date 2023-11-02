@@ -14,7 +14,7 @@ export class AuthService {
 
   async validateUser(username: string, password: string) {
     try {
-      const user = await this.usersService.findByUsername(username);
+      const user = await this.usersService.find({ username });
       const passwordIsMatch = await this.hashingService.checkHash(
         password,
         user.password,

@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -18,7 +19,7 @@ export class UsersController {
 
   @Get('me')
   async getUser(@Req() { user: { id } }) {
-    return this.usersService.findById(id);
+    return this.usersService.find({ id }, false);
   }
 
   @Patch('me')
@@ -31,6 +32,11 @@ export class UsersController {
 
   @Get(':username')
   async getAnotherUser(@Param('username') username) {
-    return await this.usersService.findByUsername(username, false, false);
+    return await this.usersService.find({ username }, false, false);
+  }
+
+  @Post('find')
+  async findUser(@Body('query') query) {
+    return await this.usersService.findMany(query);
   }
 }
