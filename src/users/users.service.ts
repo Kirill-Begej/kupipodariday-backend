@@ -5,6 +5,7 @@ import { HashingService } from 'src/hashing/hashing.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -33,8 +34,24 @@ export class UsersService {
     }
   }
 
-  async findByUsername(username: string) {
-    return await this.userRepository.findOne({ where: { username } });
+  async findByUsername(
+    username: string,
+    showEmail: boolean = true,
+    showPassword: boolean = true,
+  ) {
+    return await this.userRepository.findOne({
+      where: { username },
+      select: {
+        id: true,
+        username: true,
+        about: true,
+        avatar: true,
+        email: showEmail,
+        password: showPassword,
+        createdAt: true,
+        updateAt: true,
+      },
+    });
   }
 
   async findById(id: number) {
