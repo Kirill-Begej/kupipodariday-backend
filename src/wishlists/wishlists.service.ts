@@ -22,4 +22,22 @@ export class WishlistsService {
 
     return await this.wishlistRepository.save({ ...rest, owner, items });
   }
+
+  async findAll() {
+    return await this.wishlistRepository.find({
+      relations: ['owner', 'items'],
+      select: {
+        owner: {
+          id: true,
+          username: true,
+          about: true,
+          avatar: true,
+          email: false,
+          password: false,
+          createdAt: true,
+          updateAt: true,
+        },
+      },
+    });
+  }
 }
