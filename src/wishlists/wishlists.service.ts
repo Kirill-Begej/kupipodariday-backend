@@ -5,6 +5,7 @@ import { Wishlist } from './entities/wishlist.entity';
 import { UsersService } from 'src/users/users.service';
 import { WishesService } from 'src/wishes/wishes.service';
 import { CreateWishlistDto } from './dto/create-wishlist.dto';
+import { UpdateWishlistDto } from './dto/update-wishlist.dto';
 
 @Injectable()
 export class WishlistsService {
@@ -15,7 +16,10 @@ export class WishlistsService {
     private readonly wishesService: WishesService,
   ) {}
 
-  async create(createWishlistDto: CreateWishlistDto, id: number) {
+  async create(
+    createWishlistDto: CreateWishlistDto | UpdateWishlistDto,
+    id: number,
+  ) {
     const { itemsId, ...rest } = createWishlistDto;
     const owner = await this.usersService.find({ id }, false, false);
     const items = await this.wishesService.findByIds(itemsId);
@@ -61,5 +65,52 @@ export class WishlistsService {
     }
 
     return await this.wishlistRepository.find(req);
+  }
+
+  async updateWishlist(
+    updateWishlistDto: UpdateWishlistDto,
+    id: number,
+    paramId: number,
+  ) {
+    await this.checkOwner(id, paramId);
+    const { itemsId, ...rest } = updateWishlistDto;
+    const items = await this.wishesService.findByIds(itemsId);
+
+    const actualWish = await this.wishlistRepository
+      .createQueryBuilder()
+      .relation(Wishlist, 'items')
+      .of({ id: paramId })
+      .loadMany();
+
+    await this.wishlistRepository
+      .createQueryBuilder()
+      .relation(Wishlist, 'items')
+      .of({ id: paramId })
+      .addAndRemove(items, actualWish);
+
+    this.wishlistRepository.update(paramId, { ...rest });
+
+    return this.find(paramId);
+  }
+
+  async deleteWishlist(id: number, paramId: number) {
+    const wishlist = await this.checkOwner(id, paramId);
+
+    await this.wishlistRepository.delete(paramId);
+
+    return wishlist;
+  }
+
+  async checkOwner(id: number, paramId: number) {
+    const wishlist: any = await this.find(paramId);
+
+    if (id !== wishlist.owner.id) {
+      throw new HttpException(
+        'Можно обновлять или удалять только свои списки подарков',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    return wishlist;
   }
 }

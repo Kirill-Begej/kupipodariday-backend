@@ -31,7 +31,7 @@ export class UsersController {
   }
 
   @Get(':username')
-  async getAnotherUser(@Param('username') username) {
+  async findAnotherUser(@Param('username') username) {
     return await this.usersService.find({ username }, false, false);
   }
 
