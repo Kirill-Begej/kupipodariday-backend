@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
 import { WishesService } from './wishes.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateWishDto } from './dto/create-wish.dto';
@@ -11,10 +11,5 @@ export class WishesController {
   @Post()
   create(@Body() createWishDto: CreateWishDto, @Req() { user: { id } }) {
     return this.wishesService.create(createWishDto, id);
-  }
-
-  @Get()
-  findAll() {
-    return this.wishesService.findAll();
   }
 }
