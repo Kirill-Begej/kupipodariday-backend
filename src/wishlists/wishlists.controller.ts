@@ -1,4 +1,12 @@
-import { Controller, Post, Body, UseGuards, Req, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Get,
+  Param,
+} from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { WishlistsService } from './wishlists.service';
 import { CreateWishlistDto } from './dto/create-wishlist.dto';
@@ -18,6 +26,11 @@ export class WishlistsController {
 
   @Get()
   async findAll() {
-    return await this.wishlistsService.findAll();
+    return await this.wishlistsService.find();
+  }
+
+  @Get(':id')
+  async findById(@Param('id') id) {
+    return this.wishlistsService.find(id);
   }
 }

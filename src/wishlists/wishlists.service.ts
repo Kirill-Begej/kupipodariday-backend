@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Wishlist } from './entities/wishlist.entity';
@@ -23,8 +23,8 @@ export class WishlistsService {
     return await this.wishlistRepository.save({ ...rest, owner, items });
   }
 
-  async findAll() {
-    return await this.wishlistRepository.find({
+  async find(id: number = 0) {
+    const req = {
       relations: ['owner', 'items'],
       select: {
         owner: {
@@ -38,6 +38,28 @@ export class WishlistsService {
           updateAt: true,
         },
       },
-    });
+    };
+
+    if (id) {
+      Object.defineProperty(req, 'where', {
+        value: { id: +id },
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
+
+      const wishlist = await this.wishlistRepository.findOne(req);
+
+      if (!wishlist) {
+        throw new HttpException(
+          'Список подарков не найден',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      return wishlist;
+    }
+
+    return await this.wishlistRepository.find(req);
   }
 }
