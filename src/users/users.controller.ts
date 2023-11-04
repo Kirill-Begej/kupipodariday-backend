@@ -18,7 +18,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  async getUser(@Req() { user: { id } }) {
+  async findMe(@Req() { user: { id } }) {
     return this.usersService.find({ id }, false);
   }
 

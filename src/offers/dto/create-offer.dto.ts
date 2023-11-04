@@ -6,5 +6,8 @@ export class CreateOfferDto {
 
   @IsBoolean()
   @IsOptional()
-  hidden: boolean;
+  hidden?: boolean;
+
+  @IsNumber()
+  itemId: number;
 }

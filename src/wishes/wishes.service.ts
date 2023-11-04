@@ -36,13 +36,17 @@ export class WishesService {
     return wishes;
   }
 
-  async findWish(paramId: number) {
-    const wish = await this.wishRepository.findOne({ where: { id: paramId }});
+  async findWish(id: number) {
+    const wish = await this.wishRepository.findOne({ where: { id }, relations: ['owner'] });
 
     if (!wish) {
       throw new HttpException('Подарок не найден', HttpStatus.NOT_FOUND);
     }
 
     return wish;
+  }
+
+  async update(id, data) {
+    return await this.wishRepository.update(id, data);
   }
 }

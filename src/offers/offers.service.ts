@@ -1,26 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { WishesService } from 'src/wishes/wishes.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
-import { UpdateOfferDto } from './dto/update-offer.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Offer } from './entities/offer.entity';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class OffersService {
-  create(createOfferDto: CreateOfferDto) {
-    return 'This action adds a new offer';
-  }
+  constructor(
+    @InjectRepository(Offer)
+    private readonly offersRepository: Repository<Offer>,
+    private readonly usersService: UsersService,
+    private readonly wishesService: WishesService,
+  ) {}
 
-  findAll() {
-    return `This action returns all offers`;
-  }
+  async create(createOfferDto: CreateOfferDto, id: number) {
+    const { itemId, ...rest } = createOfferDto;
+    const user = await this.usersService.find({ id }, false);
+    const wish = await this.wishesService.findWish(itemId);
 
-  findOne(id: number) {
-    return `This action returns a #${id} offer`;
-  }
+    if (id === wish.owner.id) {
+      throw new HttpException('Hельзя вносить деньги на собственные подарки', HttpStatus.FORBIDDEN);
+    }
 
-  update(id: number, updateOfferDto: UpdateOfferDto) {
-    return `This action updates a #${id} offer`;
-  }
+    const totalRaised = +createOfferDto.amount.toFixed(2) + +wish.raised;
 
-  remove(id: number) {
-    return `This action removes a #${id} offer`;
+    if (totalRaised > wish.price) {
+      throw new HttpException('Сумма собранных средств не может превышать стоимость подарка', HttpStatus.FORBIDDEN);
+    }
+
+    await this.wishesService.update(itemId, { raised: totalRaised });
+
+    await this.offersRepository.save({ ...rest, wish, user });
+    return {};
   }
 }
