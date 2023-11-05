@@ -68,6 +68,12 @@ export class UsersService {
     return this.find({ id }, false);
   }
 
+  async findWishes(id: number) {
+    return await this.userRepository.find({
+      where: { id },
+    });
+  }
+
   async findMany(query: string) {
     const queryUser = new QueryUserDto();
     queryUser.email = query;

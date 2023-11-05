@@ -30,6 +30,11 @@ export class UsersController {
     return await this.usersService.updateUser(id, updateUserDto);
   }
 
+  @Get('me/wishes')
+  async findCurrentUserWishes(@Req() { user: { id } }) {
+    return await this.usersService.findWishes(id);
+  }
+
   @Get(':username')
   async findAnotherUser(@Param('username') username) {
     return await this.usersService.find({ username }, false, false);

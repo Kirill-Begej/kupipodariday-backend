@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Offer } from './entities/offer.entity';
 import { UsersService } from 'src/users/users.service';
-import { SELECT_FIND_OFFER } from 'src/constants/db.constants';
+import { RELATIONS_FIND_OFFERS, SELECT_OFFER } from 'src/constants/db.constants';
 
 @Injectable()
 export class OffersService {
@@ -19,21 +19,27 @@ export class OffersService {
   async create(createOfferDto: CreateOfferDto, id: number) {
     const { itemId, ...rest } = createOfferDto;
     const user = await this.usersService.find({ id }, false);
-    const wish = await this.wishesService.findWish(itemId);
+    const wish = await this.wishesService.findWishForOffers(itemId);
 
     if (id === wish.owner.id) {
-      throw new HttpException('Hельзя вносить деньги на собственные подарки', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'Hельзя вносить деньги на собственные подарки',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     const totalRaised = +createOfferDto.amount.toFixed(2) + +wish.raised;
 
     if (totalRaised > wish.price) {
-      throw new HttpException('Сумма собранных средств не может превышать стоимость подарка', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'Сумма собранных средств не может превышать стоимость подарка',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
-    await this.wishesService.update(itemId, { raised: totalRaised });
+    await this.wishesService.updateFields(itemId, { raised: totalRaised });
 
-    await this.offersRepository.save({ ...rest, item: wish.link, user });
+    await this.offersRepository.save({ ...rest, item: wish.link, user, wish });
     return {};
   }
 
@@ -41,20 +47,20 @@ export class OffersService {
     if (id) {
       const offer = await this.offersRepository.findOne({
         where: { id },
-        relations: ['user', 'user.wishes', 'user.offers', 'user.wishlists', 'user.wishlists.owner', 'user.wishlists.items'],
-        select: SELECT_FIND_OFFER,
-      })
-  
+        relations: RELATIONS_FIND_OFFERS,
+        select: SELECT_OFFER,
+      });
+
       if (!offer) {
         throw new HttpException('Не найдено', HttpStatus.NOT_FOUND);
       }
-  
+
       return offer;
     }
 
     return await this.offersRepository.find({
-      relations: ['user', 'user.wishes', 'user.offers', 'user.wishlists', 'user.wishlists.owner', 'user.wishlists.items'],
-      select: SELECT_FIND_OFFER,
+      relations: RELATIONS_FIND_OFFERS,
+      select: SELECT_OFFER,
     });
   }
 }
