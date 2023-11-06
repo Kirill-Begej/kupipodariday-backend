@@ -1,8 +1,15 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  forwardRef,
+  Inject,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, QueryFailedError, Repository } from 'typeorm';
 import { validate } from 'class-validator';
 import { HashingService } from 'src/hashing/hashing.service';
+import { WishesService } from 'src/wishes/wishes.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -13,6 +20,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly hashingService: HashingService,
+    @Inject(forwardRef(() => WishesService))
+    private readonly wishesService: WishesService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -72,6 +81,10 @@ export class UsersService {
     return await this.userRepository.find({
       where: { id },
     });
+  }
+
+  async findAnotherUserWishes(username: string) {
+    return this.wishesService.findByUsername(username);
   }
 
   async findMany(query: string) {

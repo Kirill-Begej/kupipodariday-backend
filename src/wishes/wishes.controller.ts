@@ -52,13 +52,13 @@ export class WishesController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  async delete(@Param('id') paramId,  @Req() { user: { id } }) {
+  async delete(@Param('id') paramId, @Req() { user: { id } }) {
     return await this.wishesService.deleteWish(paramId, id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/copy')
-  async copy(@Param('id') paramId,  @Req() { user: { id } }) {
+  async copy(@Param('id') paramId, @Req() { user: { id } }) {
     return await this.wishesService.copyWish(paramId, id);
   }
 }

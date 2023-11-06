@@ -1,16 +1,28 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  forwardRef,
+  Inject,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Wish } from './entities/wish.entity';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UsersService } from 'src/users/users.service';
 import { UpdateWishDto } from './dto/update-wish.dto';
-import { SELECT_USER_NOT_EMAIL_NOT_PASSWORD, SELECT_FIND_WISH, SELECT_COPY_WISH } from 'src/constants/db.constants';
+import {
+  SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
+  SELECT_FIND_WISH,
+  SELECT_COPY_WISH,
+  SELECT_OWNER_NOT_DATA,
+} from 'src/constants/db.constants';
 
 @Injectable()
 export class WishesService {
   constructor(
     @InjectRepository(Wish) private readonly wishRepository: Repository<Wish>,
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
   ) {}
 
@@ -24,6 +36,20 @@ export class WishesService {
     return await this.wishRepository.find({ where: { id: In(ids) } });
   }
 
+  async findByUsername(username: string) {
+    return this.wishRepository.find({
+      where: {
+        owner: {
+          username: username,
+        },
+      },
+      relations: ['owner'],
+      select: {
+        owner: SELECT_OWNER_NOT_DATA,
+      },
+    });
+  }
+
   async findSortWishes(sortBy: { [value: string]: string }, amount: number) {
     return await this.wishRepository.find({
       relations: ['owner'],
@@ -31,7 +57,7 @@ export class WishesService {
       take: amount,
       select: {
         owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
-      }
+      },
     });
   }
 
@@ -87,16 +113,22 @@ export class WishesService {
         raised: true,
         owner: {
           id: true,
-        }
-      }
+        },
+      },
     });
 
     if (owner.id !== id) {
-      throw new HttpException('Нельзя изменять чужие подарки', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'Нельзя изменять чужие подарки',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     if (updateWishDto.hasOwnProperty('price') && +raised) {
-      throw new HttpException('Нельзя изменять стоимость подарка, если уже есть желающие скинуться', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'Нельзя изменять стоимость подарка, если уже есть желающие скинуться',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     await this.wishRepository.update(paramId, updateWishDto);
@@ -110,7 +142,10 @@ export class WishesService {
     });
 
     if (owner.id !== id) {
-      throw new HttpException('Нельзя удалять чужие подарки', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'Нельзя удалять чужие подарки',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     await this.wishRepository.delete(paramId);
@@ -122,11 +157,14 @@ export class WishesService {
     const { owner, copied, ...rest } = await this.wishRepository.findOne({
       where: { id: paramId },
       relations: ['owner'],
-      select: SELECT_COPY_WISH
+      select: SELECT_COPY_WISH,
     });
 
     if (owner.id === id) {
-      throw new HttpException('Нельзя скопировать себе свой подарок', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'Нельзя скопировать себе свой подарок',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     const copyWish = { ...rest, copied: 0 };
@@ -134,7 +172,7 @@ export class WishesService {
     delete copyWish.createdAt;
     delete copyWish.updateAt;
 
-    this.updateFields(paramId, { copied: copied + 1});
+    this.updateFields(paramId, { copied: copied + 1 });
     this.create(copyWish, id);
     return {};
   }

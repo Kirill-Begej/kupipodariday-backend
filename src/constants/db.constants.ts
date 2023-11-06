@@ -7,7 +7,7 @@ export const SELECT_USER_NOT_EMAIL_NOT_PASSWORD = {
   password: false,
   createdAt: true,
   updateAt: true,
-}
+};
 
 const SELECT_USER_NOT_PASSWORD = {
   id: true,
@@ -18,7 +18,18 @@ const SELECT_USER_NOT_PASSWORD = {
   password: false,
   createdAt: true,
   updateAt: true,
-}
+};
+
+export const SELECT_OWNER_NOT_DATA = {
+  id: false,
+  username: false,
+  about: false,
+  avatar: false,
+  email: false,
+  password: false,
+  createdAt: false,
+  updateAt: false,
+};
 
 export const SELECT_OFFER = {
   user: {
@@ -29,8 +40,8 @@ export const SELECT_OFFER = {
       updateAt: true,
       name: true,
       image: true,
-      owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD
-    }
+      owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
+    },
   },
 };
 
@@ -43,9 +54,9 @@ export const SELECT_FIND_WISH = {
     amount: true,
     hidden: true,
     item: true,
-    user: SELECT_USER_NOT_PASSWORD
-  }
-}
+    user: SELECT_USER_NOT_PASSWORD,
+  },
+};
 
 export const SELECT_COPY_WISH = {
   id: true,
@@ -57,8 +68,8 @@ export const SELECT_COPY_WISH = {
   copied: true,
   owner: {
     id: true,
-  }
-}
+  },
+};
 
 export const RELATIONS_FIND_OFFERS = [
   'user',
@@ -67,4 +78,4 @@ export const RELATIONS_FIND_OFFERS = [
   'user.wishlists',
   'user.wishlists.owner',
   'user.wishlists.items',
-]
+];

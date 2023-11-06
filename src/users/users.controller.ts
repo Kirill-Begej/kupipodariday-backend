@@ -40,6 +40,11 @@ export class UsersController {
     return await this.usersService.find({ username }, false, false);
   }
 
+  @Get(':username/wishes')
+  async findAnotherUserWishes(@Param('username') username) {
+    return await this.usersService.findAnotherUserWishes(username);
+  }
+
   @Post('find')
   async findUser(@Body('query') query) {
     return await this.usersService.findMany(query);
