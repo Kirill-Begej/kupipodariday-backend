@@ -1,11 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Wishlist } from './entities/wishlist.entity';
 import { UsersService } from 'src/users/users.service';
 import { WishesService } from 'src/wishes/wishes.service';
 import { CreateWishlistDto } from './dto/create-wishlist.dto';
 import { UpdateWishlistDto } from './dto/update-wishlist.dto';
+import { SELECT_USER_NOT_EMAIL_NOT_PASSWORD } from 'src/constants/db.constants';
 
 @Injectable()
 export class WishlistsService {
@@ -14,33 +15,35 @@ export class WishlistsService {
     private readonly wishlistRepository: Repository<Wishlist>,
     private readonly usersService: UsersService,
     private readonly wishesService: WishesService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(
     createWishlistDto: CreateWishlistDto | UpdateWishlistDto,
     id: number,
   ) {
-    const { itemsId, ...rest } = createWishlistDto;
-    const owner = await this.usersService.find({ id }, false, false);
-    const items = await this.wishesService.findByIds(itemsId);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    return await this.wishlistRepository.save({ ...rest, owner, items });
+    try {
+      const { itemsId, ...rest } = createWishlistDto;
+      const owner = await this.usersService.find({ id }, false, false);
+      const items = await this.wishesService.findByIds(itemsId);
+
+      return await this.wishlistRepository.save({ ...rest, owner, items });
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async find(id: number = 0) {
     const req = {
       relations: ['owner', 'items'],
       select: {
-        owner: {
-          id: true,
-          username: true,
-          about: true,
-          avatar: true,
-          email: false,
-          password: false,
-          createdAt: true,
-          updateAt: true,
-        },
+        owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
       },
     };
 
@@ -72,43 +75,65 @@ export class WishlistsService {
     id: number,
     paramId: number,
   ) {
-    await this.checkOwner(id, paramId);
-    const { itemsId, ...rest } = updateWishlistDto;
-    const items = await this.wishesService.findByIds(itemsId);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const actualWish = await this.wishlistRepository
-      .createQueryBuilder()
-      .relation(Wishlist, 'items')
-      .of({ id: paramId })
-      .loadMany();
+    try {
+      await this.checkOwner(id, paramId);
+      const { itemsId, ...rest } = updateWishlistDto;
+      const items = await this.wishesService.findByIds(itemsId);
 
-    await this.wishlistRepository
-      .createQueryBuilder()
-      .relation(Wishlist, 'items')
-      .of({ id: paramId })
-      .addAndRemove(items, actualWish);
+      const actualWish = await this.wishlistRepository
+        .createQueryBuilder()
+        .relation(Wishlist, 'items')
+        .of({ id: paramId })
+        .loadMany();
 
-    this.wishlistRepository.update(paramId, { ...rest });
+      await this.wishlistRepository
+        .createQueryBuilder()
+        .relation(Wishlist, 'items')
+        .of({ id: paramId })
+        .addAndRemove(items, actualWish);
 
-    return this.find(paramId);
+      this.wishlistRepository.update(paramId, { ...rest });
+
+      return this.find(paramId);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw new HttpException(err.message, err.code);
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async deleteWishlist(id: number, paramId: number) {
-    const wishlist = await this.checkOwner(id, paramId);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    await this.wishlistRepository.delete(paramId);
+    try {
+      const wishlist = await this.checkOwner(id, paramId);
 
-    return wishlist;
+      await this.wishlistRepository.delete(paramId);
+
+      return wishlist;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw new HttpException(err.message, err.code);
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async checkOwner(id: number, paramId: number) {
     const wishlist: any = await this.find(paramId);
 
     if (id !== wishlist.owner.id) {
-      throw new HttpException(
-        'Можно обновлять или удалять только свои списки подарков',
-        HttpStatus.CONFLICT,
-      );
+      throw {
+        message: 'Можно обновлять или удалять только свои списки подарков',
+        code: HttpStatus.CONFLICT,
+      };
     }
 
     return wishlist;

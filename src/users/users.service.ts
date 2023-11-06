@@ -6,7 +6,12 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsWhere, QueryFailedError, Repository } from 'typeorm';
+import {
+  FindOptionsWhere,
+  QueryFailedError,
+  Repository,
+  DataSource,
+} from 'typeorm';
 import { validate } from 'class-validator';
 import { HashingService } from 'src/hashing/hashing.service';
 import { WishesService } from 'src/wishes/wishes.service';
@@ -22,9 +27,14 @@ export class UsersService {
     private readonly hashingService: HashingService,
     @Inject(forwardRef(() => WishesService))
     private readonly wishesService: WishesService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
     try {
       const { password, ...userData } = createUserDto;
       const user = await this.userRepository.save({
@@ -36,12 +46,15 @@ export class UsersService {
 
       return user;
     } catch (err) {
+      await queryRunner.rollbackTransaction();
       if (err instanceof QueryFailedError) {
         throw new HttpException(
           'Пользователь с таким email или username уже зарегистрирован',
           HttpStatus.CONFLICT,
         );
       }
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -66,15 +79,25 @@ export class UsersService {
   }
 
   async updateUser(id: number, updateUserDto: UpdateUserDto) {
-    const { password, ...userData } = updateUserDto;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const user = password
-      ? { ...userData, password: await this.hashingService.hashing(password) }
-      : updateUserDto;
+    try {
+      const { password, ...userData } = updateUserDto;
 
-    await this.userRepository.update(id, user);
+      const user = password
+        ? { ...userData, password: await this.hashingService.hashing(password) }
+        : updateUserDto;
 
-    return this.find({ id }, false);
+      await this.userRepository.update(id, user);
+
+      return this.find({ id }, false);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async findWishes(id: number) {
