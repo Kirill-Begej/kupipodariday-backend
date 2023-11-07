@@ -17,3 +17,19 @@ export const RELATIONS_WISHES_FIND_BY_USERNAME = [
   'offers.user.wishlists.owner',
   'offers.user.wishlists.items',
 ];
+
+export const RELATIONS_OFFERS_FIND = [
+  'item',
+  'item.owner',
+  'item.offers',
+  'user',
+  'user.wishes',
+  'user.wishes.owner',
+  'user.wishes.offers',
+  'user.offers',
+  'user.wishlists',
+  'user.wishlists.owner',
+  'user.wishlists.items',
+];
+
+export const RELATIONS_WISHLIST_FIND = ['owner', 'items'];

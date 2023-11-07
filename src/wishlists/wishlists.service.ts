@@ -6,7 +6,8 @@ import { UsersService } from 'src/users/users.service';
 import { WishesService } from 'src/wishes/wishes.service';
 import { CreateWishlistDto } from './dto/create-wishlist.dto';
 import { UpdateWishlistDto } from './dto/update-wishlist.dto';
-import { SELECT_USER_NOT_EMAIL_NOT_PASSWORD } from 'src/constants/db.constants';
+import { RELATIONS_WISHLIST_FIND } from 'src/constants/relations-db.constants';
+import { SELECT_USER_NOT_EMAIL_NOT_PASSWORD } from 'src/constants/selections-db.constants';
 
 @Injectable()
 export class WishlistsService {
@@ -41,7 +42,7 @@ export class WishlistsService {
 
   async find(id: number = 0) {
     const req = {
-      relations: ['owner', 'items'],
+      relations: RELATIONS_WISHLIST_FIND,
       select: {
         owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
       },

@@ -60,26 +60,28 @@ const SELECT_WISHLISTS = {
   image: true,
 };
 
-export const SELECT_WISHES_FIND_BY_USERNAME = {
-  owner: SELECT_USER_NOT_DATA,
-  offers: {
-    ...SELECT_OFFERS,
-    item: {
+export const SELECT_OFFERS_FIND = {
+  ...SELECT_OFFERS,
+  item: {
+    ...SELECT_WISHES,
+    owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
+  },
+  user: {
+    ...SELECT_USER_NOT_PASSWORD,
+    wishes: {
       ...SELECT_WISHES,
       owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
     },
-    user: {
-      ...SELECT_USER_NOT_PASSWORD,
-      wishes: {
-        ...SELECT_WISHES,
-        owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
-      },
-      wishlists: {
-        ...SELECT_WISHLISTS,
-        owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
-      },
+    wishlists: {
+      ...SELECT_WISHLISTS,
+      owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
     },
   },
+};
+
+export const SELECT_WISHES_FIND_BY_USERNAME = {
+  owner: SELECT_USER_NOT_DATA,
+  offers: { ...SELECT_OFFERS_FIND },
 };
 
 export const SELECT_WISH_FIND = {

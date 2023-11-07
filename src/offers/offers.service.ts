@@ -5,10 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Offer } from './entities/offer.entity';
 import { UsersService } from 'src/users/users.service';
-import {
-  RELATIONS_FIND_OFFERS,
-  SELECT_OFFER,
-} from 'src/constants/db.constants';
+import { SELECT_OFFERS_FIND } from 'src/constants/selections-db.constants';
+import { RELATIONS_OFFERS_FIND } from 'src/constants/relations-db.constants';
 
 @Injectable()
 export class OffersService {
@@ -51,9 +49,8 @@ export class OffersService {
 
       await this.offersRepository.save({
         ...rest,
-        // item: wish.link,
+        item: wish,
         user,
-        wish,
       });
       return {};
     } catch (err) {
@@ -68,8 +65,8 @@ export class OffersService {
     if (id) {
       const offer = await this.offersRepository.findOne({
         where: { id },
-        relations: RELATIONS_FIND_OFFERS,
-        select: SELECT_OFFER,
+        relations: RELATIONS_OFFERS_FIND,
+        select: SELECT_OFFERS_FIND,
       });
 
       if (!offer) {
@@ -80,8 +77,8 @@ export class OffersService {
     }
 
     return await this.offersRepository.find({
-      relations: RELATIONS_FIND_OFFERS,
-      select: SELECT_OFFER,
+      relations: RELATIONS_OFFERS_FIND,
+      select: SELECT_OFFERS_FIND,
     });
   }
 }
