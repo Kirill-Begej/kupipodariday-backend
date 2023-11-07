@@ -1,7 +1,7 @@
 {
   "name": "kupipodariday-backend",
   "version": "0.0.1",
-  "description": "",
+  "description": "Backend application - wishlist service 'KupiPodariDay'",
   "author": "Kirill Begej",
   "private": true,
   "license": "UNLICENSED",
