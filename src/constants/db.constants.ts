@@ -6,7 +6,7 @@ export const SELECT_USER_NOT_EMAIL_NOT_PASSWORD = {
   email: false,
   password: false,
   createdAt: true,
-  updateAt: true,
+  updatedAt: true,
 };
 
 const SELECT_USER_NOT_PASSWORD = {
@@ -17,7 +17,7 @@ const SELECT_USER_NOT_PASSWORD = {
   email: true,
   password: false,
   createdAt: true,
-  updateAt: true,
+  updatedAt: true,
 };
 
 export const SELECT_OWNER_NOT_DATA = {
@@ -28,7 +28,7 @@ export const SELECT_OWNER_NOT_DATA = {
   email: false,
   password: false,
   createdAt: false,
-  updateAt: false,
+  updatedAt: false,
 };
 
 export const SELECT_OFFER = {
@@ -37,7 +37,7 @@ export const SELECT_OFFER = {
     wishlists: {
       id: true,
       createdAt: true,
-      updateAt: true,
+      updatedAt: true,
       name: true,
       image: true,
       owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
@@ -50,10 +50,9 @@ export const SELECT_FIND_WISH = {
   offers: {
     id: true,
     createdAt: true,
-    updateAt: true,
+    updatedAt: true,
     amount: true,
     hidden: true,
-    item: true,
     user: SELECT_USER_NOT_PASSWORD,
   },
 };

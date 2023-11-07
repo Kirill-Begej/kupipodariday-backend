@@ -51,7 +51,7 @@ export class OffersService {
 
       await this.offersRepository.save({
         ...rest,
-        item: wish.link,
+        // item: wish.link,
         user,
         wish,
       });

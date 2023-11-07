@@ -73,7 +73,7 @@ export class UsersService {
         email: showEmail,
         password: showPassword,
         createdAt: true,
-        updateAt: true,
+        updatedAt: true,
       },
     });
   }
@@ -101,12 +101,10 @@ export class UsersService {
   }
 
   async findWishes(id: number) {
-    return await this.userRepository.find({
-      where: { id },
-    });
+    return this.wishesService.findByUserId(id);
   }
 
-  async findAnotherUserWishes(username: string) {
+  async findUserWishes(username: string) {
     return this.wishesService.findByUsername(username);
   }
 
@@ -114,14 +112,8 @@ export class UsersService {
     const queryUser = new QueryUserDto();
     queryUser.email = query;
 
-    const result = (await validate(queryUser)).length
+    return (await validate(queryUser)).length
       ? [await this.find({ username: query }, false)]
       : [await this.find({ email: query }, false)];
-
-    if (!result[0]) {
-      throw new HttpException('Пользователь не найден', HttpStatus.NOT_FOUND);
-    }
-
-    return result;
   }
 }

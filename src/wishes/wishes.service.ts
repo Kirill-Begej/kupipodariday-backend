@@ -11,12 +11,12 @@ import { Wish } from './entities/wish.entity';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UsersService } from 'src/users/users.service';
 import { UpdateWishDto } from './dto/update-wish.dto';
+import { SELECT_FIND_WISH, SELECT_COPY_WISH } from 'src/constants/db.constants';
+import { RELATIONS_WISHES_FIND_BY_USERNAME } from 'src/constants/relations-db.constants';
 import {
   SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
-  SELECT_FIND_WISH,
-  SELECT_COPY_WISH,
-  SELECT_OWNER_NOT_DATA,
-} from 'src/constants/db.constants';
+  SELECT_WISHES_FIND_BY_USERNAME,
+} from 'src/constants/selections-db.constants';
 
 @Injectable()
 export class WishesService {
@@ -47,6 +47,18 @@ export class WishesService {
     return await this.wishRepository.find({ where: { id: In(ids) } });
   }
 
+  async findByUserId(id: number) {
+    return await this.wishRepository.find({
+      where: {
+        owner: { id },
+      },
+      relations: ['owner', 'offers'],
+      select: {
+        owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
+      },
+    });
+  }
+
   async findByUsername(username: string) {
     return this.wishRepository.find({
       where: {
@@ -54,10 +66,8 @@ export class WishesService {
           username: username,
         },
       },
-      relations: ['owner'],
-      select: {
-        owner: SELECT_OWNER_NOT_DATA,
-      },
+      relations: RELATIONS_WISHES_FIND_BY_USERNAME,
+      select: SELECT_WISHES_FIND_BY_USERNAME,
     });
   }
 
@@ -212,7 +222,7 @@ export class WishesService {
       const copyWish = { ...rest, copied: 0 };
       delete copyWish.id;
       delete copyWish.createdAt;
-      delete copyWish.updateAt;
+      delete copyWish.updatedAt;
 
       this.updateFields(paramId, { copied: copied + 1 });
       this.create(copyWish, id);
