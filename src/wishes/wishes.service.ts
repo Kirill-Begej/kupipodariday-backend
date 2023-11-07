@@ -11,11 +11,17 @@ import { Wish } from './entities/wish.entity';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UsersService } from 'src/users/users.service';
 import { UpdateWishDto } from './dto/update-wish.dto';
-import { SELECT_FIND_WISH, SELECT_COPY_WISH } from 'src/constants/db.constants';
-import { RELATIONS_WISHES_FIND_BY_USERNAME } from 'src/constants/relations-db.constants';
+import {
+  RELATIONS_WISHES_FIND_BY_USERNAME,
+  RELATIONS_WISHES_FIND,
+  RELATIONS_WISH_FIND,
+} from 'src/constants/relations-db.constants';
 import {
   SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
   SELECT_WISHES_FIND_BY_USERNAME,
+  SELECT_WISH_COPY,
+  SELECT_WISH_FIND,
+  SELECT_WISH_UPDATE,
 } from 'src/constants/selections-db.constants';
 
 @Injectable()
@@ -52,7 +58,7 @@ export class WishesService {
       where: {
         owner: { id },
       },
-      relations: ['owner', 'offers'],
+      relations: RELATIONS_WISHES_FIND,
       select: {
         owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
       },
@@ -73,7 +79,7 @@ export class WishesService {
 
   async findSortWishes(sortBy: { [value: string]: string }, amount: number) {
     return await this.wishRepository.find({
-      relations: ['owner'],
+      relations: RELATIONS_WISHES_FIND,
       order: sortBy,
       take: amount,
       select: {
@@ -105,27 +111,21 @@ export class WishesService {
   async findWish(paramId: number, id: number) {
     const { owner, offers, ...rest } = await this.wishRepository.findOne({
       where: { id: paramId },
-      relations: ['owner', 'offers', 'offers.user'],
-      select: SELECT_FIND_WISH,
+      relations: RELATIONS_WISH_FIND,
+      select: SELECT_WISH_FIND,
     });
-
-    if (!owner) {
-      throw new HttpException('Подарок не найден', HttpStatus.NOT_FOUND);
-    }
 
     if (owner.id === id) {
-      return { ...rest, offers };
+      return { ...rest, owner, offers };
     }
 
-    const sortOffers = offers.map((item) => {
+    offers.map((item, i) => {
       if (item.hidden) {
-        delete item.user;
+        offers.splice(i, 1);
       }
-
-      return item;
     });
 
-    return { ...rest, sortOffers };
+    return { ...rest, owner, offers };
   }
 
   async updateWish(updateWishDto: UpdateWishDto, paramId: number, id: number) {
@@ -137,13 +137,7 @@ export class WishesService {
       const { owner, raised } = await this.wishRepository.findOne({
         where: { id: paramId },
         relations: ['owner'],
-        select: {
-          id: true,
-          raised: true,
-          owner: {
-            id: true,
-          },
-        },
+        select: SELECT_WISH_UPDATE,
       });
 
       if (owner.id !== id) {
@@ -177,12 +171,12 @@ export class WishesService {
     await queryRunner.startTransaction();
 
     try {
-      const { owner, ...rest } = await this.wishRepository.findOne({
+      const wish = await this.wishRepository.findOne({
         where: { id: paramId },
-        relations: ['owner'],
+        relations: RELATIONS_WISHES_FIND,
       });
 
-      if (owner.id !== id) {
+      if (wish.owner.id !== id) {
         throw {
           message: 'Нельзя удалять чужие подарки',
           code: HttpStatus.FORBIDDEN,
@@ -191,7 +185,7 @@ export class WishesService {
 
       await this.wishRepository.delete(paramId);
 
-      return { ...rest };
+      return wish;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new HttpException(err.message, err.code);
@@ -209,7 +203,7 @@ export class WishesService {
       const { owner, copied, ...rest } = await this.wishRepository.findOne({
         where: { id: paramId },
         relations: ['owner'],
-        select: SELECT_COPY_WISH,
+        select: SELECT_WISH_COPY,
       });
 
       if (owner.id === id) {

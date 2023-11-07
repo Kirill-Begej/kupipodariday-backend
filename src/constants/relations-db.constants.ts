@@ -1,3 +1,7 @@
+export const RELATIONS_WISHES_FIND = ['owner', 'offers'];
+
+export const RELATIONS_WISH_FIND = ['owner', 'offers', 'offers.user'];
+
 export const RELATIONS_WISHES_FIND_BY_USERNAME = [
   'owner',
   'offers',

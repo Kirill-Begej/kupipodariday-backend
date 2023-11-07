@@ -81,3 +81,32 @@ export const SELECT_WISHES_FIND_BY_USERNAME = {
     },
   },
 };
+
+export const SELECT_WISH_FIND = {
+  owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
+  offers: {
+    ...SELECT_OFFERS,
+    user: SELECT_USER_NOT_PASSWORD,
+  },
+};
+
+export const SELECT_WISH_UPDATE = {
+  id: true,
+  raised: true,
+  owner: {
+    id: true,
+  },
+};
+
+export const SELECT_WISH_COPY = {
+  id: true,
+  name: true,
+  link: true,
+  image: true,
+  price: true,
+  description: true,
+  copied: true,
+  owner: {
+    id: true,
+  },
+};

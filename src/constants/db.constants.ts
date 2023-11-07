@@ -57,7 +57,7 @@ export const SELECT_FIND_WISH = {
   },
 };
 
-export const SELECT_COPY_WISH = {
+export const  = {
   id: true,
   name: true,
   link: true,
