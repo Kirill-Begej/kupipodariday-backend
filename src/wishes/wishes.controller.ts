@@ -13,6 +13,7 @@ import { WishesService } from './wishes.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
+import { IWishAndOwnerAndOffers } from 'src/types/types';
 
 @Controller('wishes')
 export class WishesController {
@@ -20,23 +21,29 @@ export class WishesController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() createWishDto: CreateWishDto, @Req() { user: { id } }) {
+  async create(
+    @Body() createWishDto: CreateWishDto,
+    @Req() { user: { id } },
+  ): Promise<object> {
     return this.wishesService.create(createWishDto, id);
   }
 
   @Get('last')
-  async findLastWishes() {
+  async findLastWishes(): Promise<IWishAndOwnerAndOffers[]> {
     return await this.wishesService.findSortWishes({ createdAt: 'DESC' }, 40);
   }
 
   @Get('top')
-  async findTopWishes() {
+  async findTopWishes(): Promise<IWishAndOwnerAndOffers[]> {
     return await this.wishesService.findSortWishes({ copied: 'DESC' }, 20);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async findWish(@Param('id') paramId, @Req() { user: { id } }) {
+  async findWish(
+    @Param('id') paramId,
+    @Req() { user: { id } },
+  ): Promise<IWishAndOwnerAndOffers> {
     return await this.wishesService.findWish(paramId, id);
   }
 
@@ -46,19 +53,25 @@ export class WishesController {
     @Body() updateWishDto: UpdateWishDto,
     @Param('id') paramId,
     @Req() { user: { id } },
-  ) {
+  ): Promise<object | Error> {
     return await this.wishesService.updateWish(updateWishDto, paramId, id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  async delete(@Param('id') paramId, @Req() { user: { id } }) {
+  async delete(
+    @Param('id') paramId,
+    @Req() { user: { id } },
+  ): Promise<IWishAndOwnerAndOffers | Error> {
     return await this.wishesService.deleteWish(paramId, id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/copy')
-  async copy(@Param('id') paramId, @Req() { user: { id } }) {
+  async copy(
+    @Param('id') paramId,
+    @Req() { user: { id } },
+  ): Promise<object | Error> {
     return await this.wishesService.copyWish(paramId, id);
   }
 }

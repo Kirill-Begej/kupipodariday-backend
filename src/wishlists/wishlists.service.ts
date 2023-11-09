@@ -8,6 +8,7 @@ import { CreateWishlistDto } from './dto/create-wishlist.dto';
 import { UpdateWishlistDto } from './dto/update-wishlist.dto';
 import { RELATIONS_WISHLIST_FIND } from 'src/constants/relations-db.constants';
 import { SELECT_USER_NOT_EMAIL_NOT_PASSWORD } from 'src/constants/selections-db.constants';
+import { IWishlistAndOwnerAndItems } from 'src/types/types';
 
 @Injectable()
 export class WishlistsService {
@@ -22,7 +23,7 @@ export class WishlistsService {
   async create(
     createWishlistDto: CreateWishlistDto | UpdateWishlistDto,
     id: number,
-  ) {
+  ): Promise<IWishlistAndOwnerAndItems> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -40,42 +41,39 @@ export class WishlistsService {
     }
   }
 
-  async find(id: number = 0) {
-    const req = {
+  async find(): Promise<IWishlistAndOwnerAndItems[]> {
+    return await this.wishlistRepository.find({
       relations: RELATIONS_WISHLIST_FIND,
       select: {
         owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
       },
-    };
+    });
+  }
 
-    if (id) {
-      Object.defineProperty(req, 'where', {
-        value: { id: +id },
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      });
+  async findById(id: number) {
+    const wishlist = await this.wishlistRepository.findOne({
+      where: { id },
+      relations: RELATIONS_WISHLIST_FIND,
+      select: {
+        owner: SELECT_USER_NOT_EMAIL_NOT_PASSWORD,
+      },
+    });
 
-      const wishlist = await this.wishlistRepository.findOne(req);
-
-      if (!wishlist) {
-        throw new HttpException(
-          'Список подарков не найден',
-          HttpStatus.NOT_FOUND,
-        );
-      }
-
-      return wishlist;
+    if (!wishlist) {
+      throw new HttpException(
+        'Список подарков не найден',
+        HttpStatus.NOT_FOUND,
+      );
     }
 
-    return await this.wishlistRepository.find(req);
+    return wishlist;
   }
 
   async updateWishlist(
     updateWishlistDto: UpdateWishlistDto,
     id: number,
     paramId: number,
-  ) {
+  ): Promise<IWishlistAndOwnerAndItems | Error> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -99,7 +97,7 @@ export class WishlistsService {
 
       this.wishlistRepository.update(paramId, { ...rest });
 
-      return this.find(paramId);
+      return this.findById(paramId);
     } catch (err) {
       await queryRunner.rollbackTransaction();
       throw new HttpException(err.message, err.code);
@@ -108,7 +106,10 @@ export class WishlistsService {
     }
   }
 
-  async deleteWishlist(id: number, paramId: number) {
+  async deleteWishlist(
+    id: number,
+    paramId: number,
+  ): Promise<IWishlistAndOwnerAndItems | Error> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -127,8 +128,11 @@ export class WishlistsService {
     }
   }
 
-  async checkOwner(id: number, paramId: number) {
-    const wishlist: any = await this.find(paramId);
+  async checkOwner(
+    id: number,
+    paramId: number,
+  ): Promise<IWishlistAndOwnerAndItems | Error> {
+    const wishlist = await this.findById(paramId);
 
     if (id !== wishlist.owner.id) {
       throw {

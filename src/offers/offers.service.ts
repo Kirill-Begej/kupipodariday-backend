@@ -7,6 +7,7 @@ import { Offer } from './entities/offer.entity';
 import { UsersService } from 'src/users/users.service';
 import { SELECT_OFFERS_FIND } from 'src/constants/selections-db.constants';
 import { RELATIONS_OFFERS_FIND } from 'src/constants/relations-db.constants';
+import { IOffersAndItemAndUser } from 'src/types/types';
 
 @Injectable()
 export class OffersService {
@@ -18,7 +19,10 @@ export class OffersService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async create(createOfferDto: CreateOfferDto, id: number) {
+  async create(
+    createOfferDto: CreateOfferDto,
+    id: number,
+  ): Promise<object | Error> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -27,17 +31,20 @@ export class OffersService {
       const { itemId, ...rest } = createOfferDto;
       const user = await this.usersService.find({ id }, false);
       const wish = await this.wishesService.findWishForOffers(itemId);
+      let totalRaised: number;
 
-      if (id === wish.owner.id) {
+      if (!(wish instanceof Error) && id === wish.owner.id) {
         throw {
           message: 'Hельзя вносить деньги на собственные подарки',
           code: HttpStatus.FORBIDDEN,
         };
       }
 
-      const totalRaised = +createOfferDto.amount.toFixed(2) + +wish.raised;
+      if (!(wish instanceof Error)) {
+        totalRaised = +createOfferDto.amount.toFixed(2) + +wish.raised;
+      }
 
-      if (totalRaised > wish.price) {
+      if (!(wish instanceof Error) && totalRaised > wish.price) {
         throw {
           message:
             'Сумма собранных средств не может превышать стоимость подарка',
@@ -61,7 +68,9 @@ export class OffersService {
     }
   }
 
-  async find(id = 0) {
+  async find(
+    id = 0,
+  ): Promise<IOffersAndItemAndUser | IOffersAndItemAndUser[] | Error> {
     if (id) {
       const offer = await this.offersRepository.findOne({
         where: { id },

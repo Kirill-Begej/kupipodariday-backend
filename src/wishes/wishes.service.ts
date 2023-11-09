@@ -6,7 +6,7 @@ import {
   Inject,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository, DataSource } from 'typeorm';
+import { In, Repository, DataSource, UpdateResult } from 'typeorm';
 import { Wish } from './entities/wish.entity';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UsersService } from 'src/users/users.service';
@@ -23,6 +23,11 @@ import {
   SELECT_WISH_FIND,
   SELECT_WISH_UPDATE,
 } from 'src/constants/selections-db.constants';
+import {
+  IWishAndOwner,
+  IWishAndOwnerAndOffers,
+  IWishFindByUsername,
+} from 'src/types/types';
 
 @Injectable()
 export class WishesService {
@@ -33,7 +38,7 @@ export class WishesService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async create(createWishDto: CreateWishDto, id: number) {
+  async create(createWishDto: CreateWishDto, id: number): Promise<object> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -53,7 +58,7 @@ export class WishesService {
     return await this.wishRepository.find({ where: { id: In(ids) } });
   }
 
-  async findByUserId(id: number) {
+  async findByUserId(id: number): Promise<IWishAndOwnerAndOffers[]> {
     return await this.wishRepository.find({
       where: {
         owner: { id },
@@ -65,7 +70,7 @@ export class WishesService {
     });
   }
 
-  async findByUsername(username: string) {
+  async findByUsername(username: string): Promise<IWishFindByUsername[]> {
     return this.wishRepository.find({
       where: {
         owner: {
@@ -77,7 +82,10 @@ export class WishesService {
     });
   }
 
-  async findSortWishes(sortBy: { [value: string]: string }, amount: number) {
+  async findSortWishes(
+    sortBy: { [value: string]: string },
+    amount: number,
+  ): Promise<IWishAndOwnerAndOffers[]> {
     return await this.wishRepository.find({
       relations: RELATIONS_WISHES_FIND,
       order: sortBy,
@@ -88,7 +96,7 @@ export class WishesService {
     });
   }
 
-  async findWishForOffers(id: number) {
+  async findWishForOffers(id: number): Promise<IWishAndOwner | Error> {
     const wish = await this.wishRepository.findOne({
       where: { id },
       relations: ['owner'],
@@ -104,11 +112,11 @@ export class WishesService {
     return wish;
   }
 
-  async updateFields(id, data) {
+  async updateFields(id, data): Promise<UpdateResult> {
     return await this.wishRepository.update(id, data);
   }
 
-  async findWish(paramId: number, id: number) {
+  async findWish(paramId: number, id: number): Promise<IWishAndOwnerAndOffers> {
     const { owner, offers, ...rest } = await this.wishRepository.findOne({
       where: { id: paramId },
       relations: RELATIONS_WISH_FIND,
@@ -128,7 +136,11 @@ export class WishesService {
     return { ...rest, owner, offers };
   }
 
-  async updateWish(updateWishDto: UpdateWishDto, paramId: number, id: number) {
+  async updateWish(
+    updateWishDto: UpdateWishDto,
+    paramId: number,
+    id: number,
+  ): Promise<object | Error> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -165,7 +177,10 @@ export class WishesService {
     }
   }
 
-  async deleteWish(paramId: number, id: number) {
+  async deleteWish(
+    paramId: number,
+    id: number,
+  ): Promise<IWishAndOwnerAndOffers | Error> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -194,7 +209,7 @@ export class WishesService {
     }
   }
 
-  async copyWish(paramId: number, id: number) {
+  async copyWish(paramId: number, id: number): Promise<object | Error> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
